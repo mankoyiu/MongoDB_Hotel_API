@@ -1,26 +1,34 @@
-import Koa from 'koa';
-import Router, { RouterContext } from 'koa-router';
-import logger from 'koa-logger';
-import json from 'koa-json';
-import { router as articles } from './router/articles';
-import bodyParser from 'koa-bodyparser';
+import mongoose from 'mongoose';
+import express from 'express';
+import agencyRouter from './routers/agency';
+import membersRouter from './routers/members';
+import favourlistRouter from './routers/favourlist';
+import messageRouter from './routers/message';
+import hotelsRouter from './routers/hotels';
 
-const app: Koa= new Koa();
-const router: Router = new Router();
+// Load environment variables
+import dotenv from 'dotenv';
+dotenv.config();
 
-const welcomeAPI = async (ctx: RouterContext, next: any) =>{
-    ctx.body = {
-        message: 'Welcome to the Blog API'
-    }
-}
+const app = express();
+app.use(express.json());
 
-router.get ('/api/v1', welcomeAPI);
-app.use(logger());
-app.use(json());
-app.use(bodyParser());
-app.use(router.routes());
-app.use(articles.routes());
+// MongoDB connection string
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/travelAgency';
 
-app.listen(10888, () => {
-    console.log('Blog API started');
+// Connect to MongoDB
+mongoose.connect(MONGO_URI)
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('Could not connect to MongoDB', err));
+
+// Use routers
+app.use('/agency', agencyRouter);
+app.use('/member', membersRouter);
+app.use('/favourlist', favourlistRouter);
+app.use('/message', messageRouter);
+app.use('/hotel', hotelsRouter);
+
+const PORT = process.env.PORT || 10888;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
